@@ -1,132 +1,54 @@
-/*  your css code here. If applicable */
-// Check if session storage is supported
-function isSessionStorageSupported() {
-  try {
-    return window.sessionStorage !== null;
-  } catch (e) {
-    return false;
-  }
-}
+//your JS code here. If required.
+document.addEventListener("DOMContentLoaded", async function () {
+  const form = document.getElementById("customization-form");
+  const fontsizeInput = document.getElementById("fontsize");
+  const fontcolorInput = document.getElementById("fontcolor");
 
-// Check if local storage is supported
-function isLocalStorageSupported() {
-  try {
-    return window.localStorage !== null;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Retrieve progress from session storage
-function retrieveProgress() {
-  if (isSessionStorageSupported()) {
-    const progress = sessionStorage.getItem('progress');
-    if (progress) {
-      return JSON.parse(progress);
-    }
-  }
-  return [];
-}
-
-// Save progress in session storage
-function saveProgress() {
-  if (isSessionStorageSupported()) {
-    const choices = document.querySelectorAll('input[type="radio"]:checked');
-    const progress = Array.from(choices).map((choice) => choice.value);
-    sessionStorage.setItem('progress', JSON.stringify(progress));
-  }
-}
-
-// Retrieve score from local storage
-function retrieveScore() {
-  if (isLocalStorageSupported()) {
-    const score = localStorage.getItem('score');
-    if (score) {
-      return parseInt(score);
-    }
-  }
-  return 0;
-}
-
-// Save score in local storage
-function saveScore(score) {
-  if (isLocalStorageSupported()) {
-    localStorage.setItem('score', score.toString());
-  }
-}
-
-// Display the quiz questions and choices
-// Display the quiz questions and choices
-function renderQuestions() {
-  const questionsElement = document.getElementById('questions');
-  const progress = retrieveProgress();
-
-  for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
-    const questionElement = document.createElement('div');
-    const questionText = document.createTextNode(question.question);
-    questionElement.appendChild(questionText);
-
-    for (let j = 0; j < question.choices.length; j++) {
-      const choice = question.choices[j];
-      const choiceElement = document.createElement('input');
-      choiceElement.setAttribute('type', 'radio');
-      choiceElement.setAttribute('name', `question-${i}`);
-      choiceElement.setAttribute('value', choice);
-
-      if (progress[i] === choice) {
-        choiceElement.setAttribute('checked', true);
-      }
-
-      choiceElement.addEventListener('change', saveProgress);
-
-      const choiceText = document.createTextNode(choice);
-      const choiceLabel = document.createElement('label');
-      choiceLabel.appendChild(choiceElement);
-      choiceLabel.appendChild(choiceText);
-
-      questionElement.appendChild(choiceLabel);
-    }
-
-    questionsElement.appendChild(questionElement);
-  }
-}
-
-// Calculate the score
-function calculateScore() {
-  const choices = document.querySelectorAll('input[type="radio"]:checked');
-  let score = 0;
-
-  for (let i = 0; i < choices.length; i++) {
-    const choice = choices[i].value;
-    const answer = questions[i].answer;
-
-    if (choice === answer) {
-      score++;
-    }
+  // Function to get a cookie value by name
+  async function getCookie(name) {
+    return new Promise((resolve) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) resolve(parts.pop().split(';').shift());
+      else resolve(null);
+    });
   }
 
-  return score;
-}
+  // Function to set a cookie
+  async function setCookie(name, value, days) {
+    return new Promise((resolve) => {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = "expires=" + date.toUTCString();
+      document.cookie = `${name}=${value}; ${expires}; path=/`;
+      resolve();
+    });
+  }
 
-// Display the score
-function displayScore() {
-  const scoreElement = document.getElementById('score');
-  const score = retrieveScore();
-  const scoreText = document.createTextNode(`Your score is ${score} out of ${questions.length}.`);
-  scoreElement.appendChild(scoreText);
-}
+  // Apply saved preferences if they exist
+  const savedFontSize = await getCookie("fontsize");
+  const savedFontColor = await getCookie("fontcolor");
+  if (savedFontSize) {
+    document.documentElement.style.setProperty('--fontsize', `${savedFontSize}px`);
+    fontsizeInput.value = savedFontSize;
+  }
+  if (savedFontColor) {
+    document.documentElement.style.setProperty('--fontcolor', savedFontColor);
+    fontcolorInput.value = savedFontColor;
+  }
 
-// Handle the submit button click event
-function handleSubmit() {
-  const score = calculateScore();
-  saveScore(score);
-  displayScore();
-}
+  // Event listener for form submission
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const fontsize = fontsizeInput.value;
+    const fontcolor = fontcolorInput.value;
 
-// Attach event listener to the submit button
-const submitButton = document.getElementById('submit');
-submitButton.addEventListener('click', handleSubmit);
+    // Save preferences in cookies
+    await setCookie("fontsize", fontsize, 365);
+    await setCookie("fontcolor", fontcolor, 365);
 
-// Render the questions on page load
-renderQuestions();
+    // Apply preferences
+    document.documentElement.style.setProperty('--fontsize', `${fontsize}px`);
+    document.documentElement.style.setProperty('--fontcolor', fontcolor);
+  });
+});
