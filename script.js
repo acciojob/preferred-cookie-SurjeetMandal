@@ -1,24 +1,60 @@
-//your JS code here. If required.
-const fontSize = getCookie("fontSize");
-    const color = getCookie("color");
-    if (fontSize) {
-      document.body.style.fontSize = fontSize;
-      document.getElementById("fontsize").value = fontSize;
-    }
-    if (color) {
-      document.body.style.color = color;
-      document.getElementById("color").value = color;
-    }
+// Function to set a cookie
+function setCookie(name, value, days) {
+  var expires = "";
+  if (days) {
+    var date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
 
-    // Function to set user's preferences as cookies
-    function setPreferences() {
-      const fontSize = document.getElementById("fontsize").value + "px";
-      const color = document.getElementById("color").value;
-      document.body.style.fontSize = fontSize;
-      document.body.style.color = color;
-      document.cookie = "fontSize=" + fontSize + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
-      document.cookie = "color=" + color + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
-    }
+// Function to get a cookie
+function getCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+// Function to apply user preferences
+function applyPreferences() {
+  var fontsize = getCookie("fontsize");
+  var fontcolor = getCookie("fontcolor");
+
+  if (fontsize) {
+    document.documentElement.style.setProperty('--fontsize', fontsize + 'px');
+    document.getElementById('fontsize').value = fontsize;
+  }
+
+  if (fontcolor) {
+    document.documentElement.style.setProperty('--fontcolor', fontcolor);
+    document.getElementById('fontcolor').value = fontcolor;
+  }
+}
+
+// Save preferences on form submit
+document.getElementById('preferences-form').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  var fontsize = document.getElementById('fontsize').value;
+  var fontcolor = document.getElementById('fontcolor').value;
+
+  setCookie("fontsize", fontsize, 365);
+  setCookie("fontcolor", fontcolor, 365);
+
+  applyPreferences();
+});
+
+// Apply preferences on page load
+window.onload = function() {
+  applyPreferences();
+};
+
 
     // Function to retrieve a cookie by name
     function getCookie(name) {
